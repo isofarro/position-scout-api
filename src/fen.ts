@@ -9,7 +9,10 @@ export class InvalidFenException extends Error {
 }
 
 export function normalizeFen(fen: FenString): FenString {
-  const parts = fen.trim().split(/\s+/).filter((part) => part.length > 0);
+  const parts = fen
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.length > 0);
   if (parts.length < 4) {
     throw new InvalidFenException(`Invalid FEN string: insufficient parts - ${fen}`, fen);
   }

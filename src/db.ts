@@ -1,5 +1,5 @@
-import Database from "better-sqlite3";
-import path from "node:path";
+import Database from 'better-sqlite3';
+import path from 'node:path';
 
 export function getIssueDbPaths(dataDir: string, issue: number) {
   const base = `twic${issue}g`;
