@@ -19,3 +19,5 @@ export function openIssueDb(idxPath: string, graphPath: string) {
   db.exec(`ATTACH DATABASE '${safePath}' AS idx`);
   return db;
 }
+
+export type DB = ReturnType<typeof openDb>;

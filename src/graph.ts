@@ -1,7 +1,7 @@
-import type Database from 'better-sqlite3';
+import type { DB } from './db';
 import { GameMove } from './types';
 
-export function findGamesByFen(db: Database, fen: string) {
+export function findGamesByFen(db: DB, fen: string) {
   const fenRow = db.prepare('SELECT id FROM fens WHERE fen = ?').get(fen) as
     | { id: number }
     | undefined;
@@ -13,7 +13,7 @@ export function findGamesByFen(db: Database, fen: string) {
   return rows.map((r) => r.gameId);
 }
 
-export function getGameMoves(db: Database, gameId: number) {
+export function getGameMoves(db: DB, gameId: number) {
   const rows = db
     .prepare(
       'SELECT gm.ply AS ply, m.move AS move, f_from.fen AS fromFen, f_to.fen AS toFen FROM gameMoves gm JOIN moves m ON gm.moveId = m.id JOIN fens f_from ON m.fromFenId = f_from.id JOIN fens f_to ON m.toFenId = f_to.id WHERE gm.gameId = ? ORDER BY gm.ply',
@@ -24,7 +24,7 @@ export function getGameMoves(db: Database, gameId: number) {
   return out;
 }
 
-export function getFenOccurrences(db: Database, gameId: number, fen: string) {
+export function getFenOccurrences(db: DB, gameId: number, fen: string) {
   const fenRow = db.prepare('SELECT id FROM fens WHERE fen = ?').get(fen) as
     | { id: number }
     | undefined;

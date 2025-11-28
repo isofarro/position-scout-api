@@ -1,7 +1,7 @@
-import type Database from 'better-sqlite3';
+import type { DB } from './db';
 import { GameHeader } from './types';
 
-export function getGameHeader(db: Database, gameId: number) {
+export function getGameHeader(db: DB, gameId: number) {
   const game = db
     .prepare(
       'SELECT id, gameNo, eventId, siteId, openingId, whiteId, whiteElo, blackId, blackElo, round, result, timeControl, date, eco, plyCount FROM idx.games WHERE id = ?',
