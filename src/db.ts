@@ -11,3 +11,11 @@ export function getIssueDbPaths(dataDir: string, issue: number) {
 export function openDb(dbPath: string) {
   return new Database(dbPath, { readonly: true, fileMustExist: true });
 }
+
+export function openIssueDb(idxPath: string, graphPath: string) {
+  const db = openDb(graphPath);
+  db.pragma('query_only = ON');
+  const safePath = idxPath.replace(/'/g, "''");
+  db.exec(`ATTACH DATABASE '${safePath}' AS idx`);
+  return db;
+}

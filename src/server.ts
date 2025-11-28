@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import { getConfig } from './config';
-import { getIssueDbPaths } from './db';
+import { getIssueDbPaths, openIssueDb } from './db';
 import { findGamesByFen, getGameMoves } from './graph';
 import { getGameHeader } from './idx';
 import { normalizeFen } from './fen';
@@ -26,12 +26,14 @@ app.get('/twic/:issue/:fen', async (req, reply) => {
   if (!fs.existsSync(idxPath) || !fs.existsSync(graphPath)) {
     return reply.status(404).send({ error: 'issue not found', issue, idxPath, graphPath });
   }
-  const gameIds = findGamesByFen(graphPath, fen);
+  const db = openIssueDb(idxPath, graphPath);
+  const gameIds = findGamesByFen(db, fen);
   const results = gameIds.map((id) => {
-    const header = getGameHeader(idxPath, id);
-    const moves = getGameMoves(graphPath, id);
+    const header = getGameHeader(db, id);
+    const moves = getGameMoves(db, id);
     return { id, header, moves };
   });
+  db.close();
   return reply.send({ issue, fen, count: results.length, games: results });
 });
 

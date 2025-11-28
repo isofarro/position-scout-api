@@ -31,7 +31,11 @@ export function getConfig(): AppConfig {
     }
   }
   const dataDirEnv = process.env.TWIC_DATA_DIR;
-  const dataDir = dataDirArg || dataDirEnv || path.resolve(process.cwd(), '_data/twic/');
+  const dataDir = dataDirArg
+    ? path.resolve(process.cwd(), dataDirArg)
+    : dataDirEnv
+      ? path.resolve(process.cwd(), dataDirEnv)
+      : path.resolve(process.cwd(), '_data/twic/');
   const port = portArg ? Number(portArg) : Number(process.env.PORT || 3000);
   return { dataDir, port };
 }
