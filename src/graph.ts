@@ -7,7 +7,7 @@ export function findGamesByFen(db: DB, fen: string) {
     | undefined;
   if (!fenRow) return [] as number[];
   const stmt = db.prepare(
-    'SELECT DISTINCT gm.gameId AS gameId FROM gameMoves gm JOIN moves m ON gm.moveId = m.id WHERE m.fromFenId = ? OR m.toFenId = ?',
+    'SELECT gm.gameId AS gameId FROM gameMoves gm JOIN moves m ON gm.moveId = m.id JOIN idx.games g ON gm.gameId = g.id WHERE m.fromFenId = ? OR m.toFenId = ? GROUP BY gm.gameId ORDER BY g.date ASC',
   );
   const rows = stmt.all(fenRow.id, fenRow.id) as { gameId: number }[];
   return rows.map((r) => r.gameId);
