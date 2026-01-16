@@ -4,10 +4,7 @@ import { GameService } from './games/GameService';
 
 const program = new Command();
 
-program
-  .name('scout')
-  .description('Chess database scout CLI')
-  .version('0.1.0');
+program.name('scout').description('Chess database scout CLI').version('0.1.0');
 
 program
   .command('games')

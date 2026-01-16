@@ -14,7 +14,7 @@ export class DatabaseManager {
    */
   static open(mainPath: string, attachments: DatabaseAttachment[] = []): DB {
     const db = new Database(mainPath, { readonly: true, fileMustExist: true });
-    
+
     // Enforce read-only queries
     db.pragma('query_only = ON');
 

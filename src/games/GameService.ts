@@ -20,15 +20,15 @@ export class GameService {
     }
 
     const db = DatabaseManager.open(graphPath, [{ alias: 'idx', path: idxPath }]);
-    
+
     try {
       const repo = new GameRepository(db);
       const gameIds = repo.findGamesByFen(fen);
-      
+
       const games = gameIds.map((id) => {
         const header = repo.getGameHeader(id);
         const moves = repo.getGameMoves(id);
-        
+
         if (!header) {
           throw new Error(`Game header not found for ID: ${id}`);
         }

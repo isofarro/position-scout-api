@@ -10,7 +10,7 @@ export async function gameRoutes(fastify: FastifyInstance) {
   fastify.get('/twic/:issue/:fen', async (req, reply) => {
     const issueStr = (req.params as any).issue as string;
     const fenEnc = (req.params as any).fen as string;
-    
+
     const issue = Number(issueStr);
     if (!Number.isInteger(issue)) {
       return reply.status(400).send({ error: 'invalid issue' });
@@ -26,7 +26,7 @@ export async function gameRoutes(fastify: FastifyInstance) {
       if (e.message && e.message.includes('Issue database not found')) {
         return reply.status(404).send({ error: 'issue not found', detail: e.message });
       }
-      
+
       fastify.log.error(e);
       return reply.status(500).send({ error: 'internal server error' });
     }
