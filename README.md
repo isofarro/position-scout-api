@@ -1,76 +1,132 @@
-# Position Scout API
+# Scout
 
-The Position Scout API serves chess games from TWIC issue databases by position (FEN). It queries custom-built TWIC indexes to find and retrieve matching games.
+Scout is a modular application for chess data services.
+
+The first available feature is **Games**, which serves chess games from TWIC issue databases by position (FEN). It queries custom-built TWIC indexes to find and retrieve matching games.
 
 ## Requirements
 
 - Node `>= 22.12`
-- Yarn 1 (Corepack will auto-pin)
+- Yarn 4
 - SQLite files for TWIC issues: `twic{issue}g.idx` and `twic{issue}g.graph`
 
 ## Install
 
 - `yarn`
 
-## Configure Data Directory
+## Data Directory Structure
 
-- Default directory: `_data/twic/` (relative to project root)
-- Override options:
-  - CLI flag: `--data-dir` or `-d`
-  - Environment variable: `TWIC_DATA_DIR`
+Scout requires a data directory to function. The **Games** feature expects its database files to be located in a `pgn-index` subdirectory within the main data directory.
 
-Examples:
+**Default Structure:**
+```
+project-root/
+  _data/              <-- Default Data Directory
+    pgn-index/        <-- Required subdirectory for Games feature
+      twic1620g.idx
+      twic1620g.graph
+      ...
+```
 
-- Set default structure:
-  - Create `_data/twic/` and place files like `twic1620g.idx` and `twic1620g.graph` inside
-- Override with CLI (absolute or relative):
-  - `yarn dev --data-dir /absolute/path/to/_data/twic/`
-  - `yarn dev --data-dir ../../../Projects-chess/go-pgnutils/_data/twic/`
-- Override via env:
-  - `TWIC_DATA_DIR=/absolute/path/to/_data/twic/ yarn dev`
+## Configuration
 
-## Start the Server
+You can configure the root data directory and the server port using CLI flags or environment variables.
 
-- Default:
-  - `yarn dev`
-  - Port defaults to `3000`
-- With data-dir override:
-  - `yarn dev --data-dir /my/path/to/twic/`
-- Change port:
-  - `yarn dev --port 3001`
-  - or `PORT=3001 yarn dev`
+### Data Directory
+- **Default:** `_data/` (relative to project root)
+- **CLI Flag:** `--data-dir` or `-d`
+- **Env Variable:** `DATA_DIR`
 
-## API
+### Port
+- **Default:** `3000`
+- **CLI Flag:** `--port` or `-p`
+- **Env Variable:** `PORT`
 
-- `GET /twic/:issue/:fen`
-  - `issue` is the TWIC number, e.g. `1620`
-  - `fen` must be URL-encoded
-- Response shape:
-  - `{ issue, fen, count, games: [{ id, header, moves }] }`
-  - `header` fields (PGN-style): `gameNo`, `white`, `whiteElo`, `black`, `blackElo`, `event`, `eventDate`, `site`, `opening`, `round`, `result`, `timeControl`, `date`, `ECO`, `plyCount`
-  - `moves` is an array of strings:
-    - Each element except the last: `<from_fen>|<move>`
-    - Last element: terminal position FEN
+## Running the API Server
 
-### Types
+### Development
+```bash
+# Default (uses _data/ and port 3000)
+yarn dev
 
-- The TypeScript types for the response payload are defined in `src/types.ts`:
-  - `QueryResponse`, `Game`, `GameHeader`, `GameMove`
+# With overrides
+yarn dev --data-dir /absolute/path/to/my_data/ --port 3001
+```
 
-## FEN Normalization
+### Production (PM2)
+To run the server in production using PM2, create an `ecosystem.config.js` file in the root directory:
 
-- The server normalizes incoming FEN by removing the half-move clock and move number and sanitizing en-passant squares when no legal en-passant capture is available.
-- Example input: `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`
-- Normalized: `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -`
+```javascript
+module.exports = {
+  apps: [{
+    name: "scout",
+    script: "./dist/server.js",
+    env: {
+      NODE_ENV: "production",
+      PORT: 3000,
+      DATA_DIR: "/absolute/path/to/_data/"
+    }
+  }]
+};
+```
 
-## Examples
+Build and start the application:
+```bash
+# Build the project
+yarn build
 
-- Query the initial position in TWIC 1620:
-  - `curl "http://127.0.0.1:3000/twic/1620/rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR%20w%20KQkq%20-%200%201"`
-- Query a middle-game position (example, URL-encoded):
-  - `curl "http://127.0.0.1:3000/twic/1620/rn1qkbnr%2Fpp2pppp%2F2p5%2F3pPb2%2F3P2P1%2F8%2FPPP2P1P%2FRNBQKBNR%20b%20KQkq%20g3%200%204"`
+# Start with PM2
+pm2 start ecosystem.config.js
+```
+
+## CLI Usage
+
+Scout includes a CLI tool for interacting with the services directly.
+
+### Usage
+
+```bash
+yarn scout <command> [options]
+```
+
+### Commands
+
+#### `games <issue> <fen>`
+Find games in a specific TWIC issue that match a given FEN position.
+
+- `issue`: The TWIC issue number (e.g., `1626`).
+- `fen`: The FEN string to search for.
+
+### Output Handling
+By default, Yarn 4 minimizes output noise. You can usually pipe the output directly to other tools.
+
+**Example: Pure JSON Output**
+```bash
+yarn scout games 1626 "r1bqk2r/2pp1ppp/p1n2n2/1pb1p3/4P3/1B3N2/PPPP1PPP/RNBQ1RK1 w kq - 2 7" | jq
+```
+
+## API Endpoints
+
+### `GET /twic/:issue/:fen`
+- `issue` is the TWIC number, e.g. `1620`
+- `fen` must be URL-encoded
+- **Response:**
+  ```json
+  {
+    "issue": 1620,
+    "fen": "...",
+    "count": 5,
+    "games": [
+      {
+        "id": 1,
+        "header": { "white": "Player A", "black": "Player B", ... },
+        "moves": ["fen1|move1", "fen2|move2", "fen_terminal"]
+      }
+    ]
+  }
+  ```
 
 ## Notes
 
 - Databases are opened in read-only mode.
-- If the requested issue files cannot be found in the configured directory, the API responds with an error showing the resolved paths.
+- If the requested issue files cannot be found, the API/CLI responds with an error showing the checked paths.
